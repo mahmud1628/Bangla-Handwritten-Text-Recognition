@@ -1,0 +1,24 @@
+# Core app dependencies
+numpy>=1.26
+pillow>=10.0
+opencv-python>=4.8
+gradio>=4.0
+
+# Model inference
+torch>=2.2
+transformers>=4.40
+safetensors>=0.4
+huggingface-hub>=0.23
+torchvision>=0.15
+
+# YOLO detection dependencies (used by detect.py)
+ultralytics>=8.2.34
+gitpython>=3.1.30
+matplotlib>=3.8
+pandas>=2.2
+pyyaml>=6.0
+requests>=2.31
+scipy>=1.11
+seaborn>=0.13
+tqdm>=4.66
+psutil>=5.9
