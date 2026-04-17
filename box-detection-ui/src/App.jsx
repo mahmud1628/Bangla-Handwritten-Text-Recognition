@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 const API_BASE_URL = import.meta.env.VITE_BOX_API_URL || 'http://127.0.0.1:8001'
-const REQUEST_TIMEOUT_MS = 180000
+const REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_BOX_REQUEST_TIMEOUT_MS || 0)
 
 function App() {
   const [file, setFile] = useState(null)
@@ -38,7 +38,10 @@ function App() {
     formData.append('file', file)
 
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+    let timeoutId = null
+    if (REQUEST_TIMEOUT_MS > 0) {
+      timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+    }
 
     try {
       const response = await fetch(`${API_BASE_URL}/detect-boxes-json`, {
@@ -56,14 +59,16 @@ function App() {
       setResult(payload)
     } catch (requestError) {
       if (requestError?.name === 'AbortError') {
-        setError('Request timed out. Please try a smaller or clearer image.')
+        setError('Request timed out. You can increase VITE_BOX_REQUEST_TIMEOUT_MS or disable it.')
       } else if (requestError instanceof TypeError) {
         setError('Could not reach backend API. Check backend URL and server status.')
       } else {
         setError(requestError.message || 'Unexpected API error occurred.')
       }
     } finally {
-      clearTimeout(timeoutId)
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
       setLoading(false)
     }
   }
@@ -116,15 +121,19 @@ function App() {
             <div className="grid">
               {result.crops.map((crop, index) => {
                 const boxMeta = result.boxes[index]
+                const recognition = crop.recognition || boxMeta?.recognition || {}
                 return (
                   <article className="crop-card" key={crop.id}>
                     <img src={crop.image} alt={`Detected box ${crop.id}`} loading="lazy" />
                     <div className="meta">
-                      <strong>Box {crop.id}</strong>
-                      <span>conf: {boxMeta?.confidence ?? 'n/a'}</span>
-                      <span>
-                        size: {boxMeta?.bbox?.w ?? '-'} x {boxMeta?.bbox?.h ?? '-'}
-                      </span>
+                      {recognition?.error ? (
+                        <p className="ocr-error">OCR error: {recognition.error}</p>
+                      ) : (
+                        <div className="ocr-block">
+                          <p className="ocr-title">Recognized Text</p>
+                          <p className="ocr-text">{recognition?.full_text || 'No text recognized.'}</p>
+                        </div>
+                      )}
                     </div>
                   </article>
                 )

@@ -23,6 +23,14 @@ Create `.env` file in this folder if your backend is not on `http://127.0.0.1:80
 VITE_BOX_API_URL=http://127.0.0.1:8001
 ```
 
+Optional request timeout (milliseconds):
+
+```bash
+VITE_BOX_REQUEST_TIMEOUT_MS=0
+```
+
+`0` means no client-side timeout (default).
+
 ## Run
 
 ```bash
@@ -49,4 +57,8 @@ Response expected:
 
 - `count`: number of detected boxes
 - `boxes`: metadata for each box
-- `crops`: array of `{ id, image }` where `image` is a base64 PNG data URL
+- `crops`: array of `{ id, image, recognition }` where:
+	- `image` is a base64 PNG data URL
+	- `recognition` has `line_count`, `word_count`, `full_text`, `error`
+
+The UI shows recognized text under each detected crop.
