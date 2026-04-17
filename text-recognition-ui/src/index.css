@@ -1,0 +1,154 @@
+:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --border: #d1d5db;
+  --danger: #b91c1c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: radial-gradient(circle at 20% 10%, #e8f7f5 0%, var(--bg) 38%);
+  color: var(--text);
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: 1.9rem;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 10px 26px rgba(10, 20, 40, 0.05);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+label {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+input[type='file'],
+button,
+textarea {
+  width: 100%;
+  font: inherit;
+}
+
+input[type='file'] {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #f9fafb;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--primary-hover);
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 14px;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.results {
+  margin-top: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: #f9fafb;
+}
+
+.stat .label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.stat .value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+textarea {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-height: 220px;
+  padding: 12px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.preview {
+  margin-top: 14px;
+}
+
+.preview img {
+  max-width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 20px 14px 28px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+}

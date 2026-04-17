@@ -12,28 +12,83 @@ from .modeling import load_recognition_components
 from .segmentation import segment_image
 
 
-_COMPONENTS = load_recognition_components()
+_COMPONENTS = None
+
+
+def init_pipeline_components():
+    """Load heavy inference components once and reuse across requests."""
+    global _COMPONENTS
+    if _COMPONENTS is None:
+        _COMPONENTS = load_recognition_components()
+    return _COMPONENTS
+
+
+def _get_components():
+    if _COMPONENTS is None:
+        return init_pipeline_components()
+    return _COMPONENTS
 
 
 def recognize_word(image_path, num_beams=3):
     try:
+        components = _get_components()
         image = Image.open(image_path).convert("RGB")
-        image_inputs = _COMPONENTS["image_processor"](image, return_tensors="pt")
-        pixel_values = image_inputs["pixel_values"].to(_COMPONENTS["device"])
+        image_inputs = components["image_processor"](image, return_tensors="pt")
+        pixel_values = image_inputs["pixel_values"].to(components["device"])
 
         with torch.no_grad():
-            generated_ids = _COMPONENTS["recog_model"].generate(
+            generated_ids = components["recog_model"].generate(
                 pixel_values=pixel_values,
                 max_length=128,
                 num_beams=int(num_beams),
-                bos_token_id=_COMPONENTS["text_processor"].bos_token_id,
-                eos_token_id=_COMPONENTS["text_processor"].eos_token_id,
-                pad_token_id=_COMPONENTS["text_processor"].pad_token_id,
+                bos_token_id=components["text_processor"].bos_token_id,
+                eos_token_id=components["text_processor"].eos_token_id,
+                pad_token_id=components["text_processor"].pad_token_id,
             )
 
-        return _COMPONENTS["text_processor"].decode(generated_ids[0].cpu().numpy())
+        return components["text_processor"].decode(generated_ids[0].cpu().numpy())
     except Exception as exc:
         return f"[Error: {str(exc)}]"
+
+
+def recognize_document(image, num_beams=3):
+    """Server-friendly full document recognition that returns structured output."""
+    temp_dir = None
+    try:
+        _get_components()
+
+        if isinstance(image, np.ndarray):
+            image = Image.fromarray(image)
+
+        temp_dir = tempfile.mkdtemp(prefix="bengali_htr_")
+
+        preprocessed_gray = preprocess_input_image(image)
+        image_path = tempfile.NamedTemporaryFile(dir=temp_dir, suffix=".jpg", delete=False).name
+        cv2.imwrite(image_path, preprocessed_gray)
+
+        word_segments = segment_image(image_path, temp_dir)
+        if not word_segments:
+            raise ValueError(
+                "No text detected in the image. Check model files, YOLOv5 setup, and image quality."
+            )
+
+        full_text_lines = []
+        total_words = sum(len(words) for words in word_segments.values())
+
+        for line_id in sorted(word_segments.keys(), key=lambda x: int(x.split("_")[1])):
+            word_images = word_segments[line_id]
+            line_words = [recognize_word(word_img, num_beams=num_beams) for word_img in word_images]
+            full_text_lines.append(" ".join(line_words))
+
+        full_text = "\n".join(full_text_lines)
+        return {
+            "line_count": len(word_segments),
+            "word_count": total_words,
+            "full_text": full_text,
+        }
+    finally:
+        if temp_dir is not None:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def preprocess_input_image(image):
