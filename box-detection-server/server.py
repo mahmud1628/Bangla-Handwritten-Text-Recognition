@@ -51,7 +51,7 @@ async def detect_boxes(file: UploadFile = File(...)):
 
     try:
         boxes, img_rgb = detect_handwritten_boxes(pil_image)
-        crops = crop_boxes(img_rgb, boxes, padding=10)
+        crops = crop_boxes(img_rgb, boxes, outer_padding=0, inner_margin=20)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Box detection failed: {exc}") from exc
 
@@ -80,7 +80,7 @@ async def detect_boxes_json(file: UploadFile = File(...)) -> dict:
 
     try:
         boxes, img_rgb = detect_handwritten_boxes(pil_image)
-        crops = crop_boxes(img_rgb, boxes, padding=10)
+        crops = crop_boxes(img_rgb, boxes, outer_padding=0, inner_margin=20)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Box detection failed: {exc}") from exc
 

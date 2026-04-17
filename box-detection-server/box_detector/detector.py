@@ -123,6 +123,9 @@ def detect_handwritten_boxes(pil_image: Image.Image) -> tuple[list[dict], np.nda
         if not skip:
             kept.append(box)
 
+    # Sort boxes vertically (top to bottom).
+    kept.sort(key=lambda b: b["bbox"]["y"])
+
     for i, box in enumerate(kept):
         box["id"] = i + 1
 
@@ -146,17 +149,35 @@ def annotate_image(img_rgb: np.ndarray, boxes: List[Dict]) -> Image.Image:
     return pil_img
 
 
-def crop_boxes(img_rgb: np.ndarray, boxes: List[Dict], padding: int = 10) -> list[Image.Image]:
+def crop_boxes(
+    img_rgb: np.ndarray,
+    boxes: List[Dict],
+    outer_padding: int = 0,
+    inner_margin: int = 3,
+) -> list[Image.Image]:
     pil_img = Image.fromarray(img_rgb)
     img_w, img_h = pil_img.size
     crops = []
 
     for box in boxes:
         x, y, bw, bh = box["bbox"].values()
-        x1 = max(0, x - padding)
-        y1 = max(0, y - padding)
-        x2 = min(img_w, x + bw + padding)
-        y2 = min(img_h, y + bh + padding)
+
+        # Shrink the detected box from inside to remove boundary lines.
+        adjusted_x = x + inner_margin
+        adjusted_y = y + inner_margin
+        adjusted_bw = max(0, bw - 2 * inner_margin)
+        adjusted_bh = max(0, bh - 2 * inner_margin)
+
+        # Apply optional outside padding and clamp to bounds.
+        x1 = max(0, adjusted_x - outer_padding)
+        y1 = max(0, adjusted_y - outer_padding)
+        x2 = min(img_w, adjusted_x + adjusted_bw + outer_padding)
+        y2 = min(img_h, adjusted_y + adjusted_bh + outer_padding)
+
+        # Ensure coordinates are always valid.
+        x1 = min(x1, x2)
+        y1 = min(y1, y2)
+
         crop = pil_img.crop((x1, y1, x2, y2))
         crops.append(crop)
 
