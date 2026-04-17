@@ -3,7 +3,7 @@ from io import BytesIO
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from htr_pipeline.pipeline import init_pipeline_components, recognize_document
 
@@ -41,7 +41,7 @@ async def recognize(file: UploadFile = File(...)):
 
     try:
         content = await file.read()
-        image = Image.open(BytesIO(content)).convert("RGB")
+        image = ImageOps.exif_transpose(Image.open(BytesIO(content))).convert("RGB")
     except UnidentifiedImageError as exc:
         raise HTTPException(status_code=400, detail="Invalid image file") from exc
     except Exception as exc:
