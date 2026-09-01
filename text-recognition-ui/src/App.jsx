@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-const API_BASE_URL = 'http://127.0.0.1:8000'
+const API_URL = import.meta.env.DEV ? 'http://127.0.0.1:8000/recognize' : '/api/recognize'
 const REQUEST_TIMEOUT_SECONDS = 300
 
 function App() {
@@ -42,7 +42,7 @@ function App() {
       const controller = new AbortController()
       timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_SECONDS * 1000)
 
-      const response = await fetch(`${API_BASE_URL}/recognize`, {
+      const response = await fetch(API_URL, {
         method: 'POST',
         body: formData,
         signal: controller.signal,
