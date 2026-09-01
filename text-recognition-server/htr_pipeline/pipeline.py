@@ -6,7 +6,7 @@ import cv2
 import gradio as gr
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, ImageOps
 
 from .modeling import load_recognition_components
 from .segmentation import segment_image
@@ -93,7 +93,9 @@ def recognize_document(image, num_beams=3):
 
 def preprocess_input_image(image):
     if isinstance(image, Image.Image):
-        rgb = np.array(image.convert("RGB"))
+        # Normalize EXIF orientation so browser uploads and GUI uploads behave the same.
+        normalized = ImageOps.exif_transpose(image).convert("RGB")
+        rgb = np.array(normalized)
     elif isinstance(image, np.ndarray):
         if image.ndim == 2:
             rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
